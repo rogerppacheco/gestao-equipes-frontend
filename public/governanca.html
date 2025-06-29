@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Governança - Record PAP</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; }
+        header { background-color: #fff; padding: 1rem 2rem; box-shadow: 0 2px 5px rgba(0,0,0,0.2); position: sticky; top: 0; z-index: 1000; }
+        .header-container { max-width: 95%; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .logo { max-width: 150px; height: auto; cursor: pointer; }
+        header nav ul { list-style: none; display: flex; gap: 1.5rem; align-items: center; margin:0; padding:0; }
+        header nav ul li a { text-decoration: none; color: #1a1a1a; font-weight: 500; }
+        .action-button { background-color: #1a1a1a; color: #fff; padding: 0.5rem 1rem; border-radius: 0.25rem; text-decoration: none; font-size: 0.9rem; font-weight: 600; cursor: pointer; border: 1px solid transparent;}
+        .logout-button { background-color: #dc3545; }
+        .main-container { display: flex; min-height: 100vh; }
+        .side-nav {
+            width: 250px;
+            background-color: #1a1a1a;
+            color: white;
+            padding: 1.5rem 0;
+            flex-shrink: 0;
+        }
+        .side-nav h1 {
+            text-align: center;
+            padding: 0 1rem 1.5rem 1rem;
+            font-size: 1.5rem;
+            border-bottom: 1px solid #444;
+            margin: 0;
+        }
+        .nav-menu { list-style: none; padding: 0; margin: 0; }
+        .nav-menu li { padding: 1rem 1.5rem; cursor: pointer; border-bottom: 1px solid #444; transition: background-color 0.3s; }
+        .nav-menu li:hover, .nav-menu li.active { background-color: #007bff; }
+        .content-area { flex-grow: 1; padding: 2rem; }
+        .content-section {
+            display: none;
+            background: #fff;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .content-section.active { display: block; }
+        h2, h3 { text-align: center; color: #333; margin-bottom: 2rem; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .form-group { display: flex; flex-direction: column; margin-bottom: 1rem; }
+        .form-group label { margin-bottom: 0.5rem; font-weight: bold; }
+        .form-group input, .form-group select { padding: 0.75rem; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem; }
+        .btn { display: inline-block; width: auto; padding: 0.75rem 1.5rem; border: none; background-color: #28a745; color: #fff; font-size: 1rem; border-radius: 4px; cursor: pointer; margin-top: 1rem; text-align: center;}
+        .btn:hover { background-color: #218838; }
+        table { width: 100%; border-collapse: collapse; margin-top: 2rem; }
+        th, td { border: 1px solid #ddd; padding: 0.75rem; text-align: left; vertical-align: middle;}
+        th { background-color: #f2f2f2; }
+        .actions-cell button { margin-right: 5px; padding: 0.5rem; border-radius: 4px; border: none; cursor: pointer;}
+        .btn-edit { background-color: #ffc107; }
+        .btn-delete { background-color: #dc3545; color: white; }
+        .btn-reactivate { background-color: #17a2b8; color: white; }
+        .tab-nav { border-bottom: 2px solid #ccc; margin-bottom: 1.5rem; }
+        .tab-nav button { padding: 0.75rem 1.5rem; border: none; background-color: transparent; cursor: pointer; font-size: 1.1rem; border-bottom: 3px solid transparent; margin-bottom: -2px; }
+        .tab-nav button.active { border-bottom-color: #007bff; font-weight: bold; }
+        .generic-list { list-style: none; padding: 0; margin-bottom: 1.5rem;}
+        .generic-list li { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; border-bottom: 1px solid #ddd; }
+        .generic-list-actions button { margin-left: 0.5rem; padding: 0.3rem 0.6rem; }
+        .form-inline { display: flex; gap: 1rem; margin-top: 1rem; align-items: center; }
+        .form-inline input[type="text"], .form-inline input[type="date"] { flex-grow: 1; }
+        .form-inline label { display: flex; align-items: center; gap: 0.5rem; }
+        footer { background-color: #1a1a1a; color: #fff; padding: 2rem 1rem; text-align: center; }
+        footer p { font-size: 0.9rem; margin-bottom: 0.5rem; }
+        footer a { color: #b3b3b3; text-decoration: none; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-container">
+            <img src="logo.png" alt="Record PAP Logo" class="logo" onclick="window.location.href='index.html'">
+            <nav>
+                <ul>
+                    <li><a href="area-interna.html">Área Interna</a></li>
+                    <li><button onclick="logout()" class="action-button logout-button">Sair</button></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+<div class="main-container">
+    <nav class="side-nav">
+        <h1>Governança</h1>
+        <ul class="nav-menu">
+            <li onclick="mostrarSecao('usuarios', this)">Gestão de Usuários</li>
+            <li onclick="mostrarSecao('perfis', this)">Gestão de Perfis</li>
+            <li onclick="mostrarSecao('motivos', this)">Gestão de Motivos</li>
+            <li onclick="mostrarSecao('feriados', this)">Gestão de Feriados</li>
+            <li onclick="mostrarSecao('relatorios', this)">Relatórios</li>
+        </ul>
+    </nav>
+
+    <main class="content-area">
+        <section id="usuarios-section" class="content-section">
+            <h2>Gestão de Usuários</h2>
+            <div id="form-container">
+                <h3 id="form-title">Cadastrar Novo Usuário</h3>
+                <form id="user-form">
+                    <input type="hidden" id="user_id">
+                    <div class="form-grid">
+                        <div class="form-group"><label for="nome_completo">Nome Completo</label><input type="text" id="nome_completo" required></div>
+                        <div class="form-group"><label for="cpf">CPF</label><input type="text" id="cpf"></div>
+                        <div class="form-group"><label for="email">E-mail</label><input type="email" id="email" required></div>
+                        <div class="form-group" id="senha-group"><label for="senha">Senha</label><input type="password" id="senha"></div>
+                        <div class="form-group"><label for="perfil_id">Perfil</label><select id="perfil_id" required></select></div>
+                        <div class="form-group"><label for="supervisor_id">Líder Imediato</label><select id="supervisor_id"><option value="">Nenhum</option></select></div>
+                        <div class="form-group"><label for="valor_almoco">Auxílio Almoço (diário)</label><input type="number" id="valor_almoco" step="0.01" placeholder="Ex: 18.00"></div>
+                        <div class="form-group"><label for="valor_passagem">Auxílio Passagem (diário)</label><input type="number" id="valor_passagem" step="0.01" placeholder="Ex: 9.60"></div>
+                    </div>
+                    <button type="submit" class="btn">Salvar</button>
+                    <button type="button" class="btn" onclick="resetForm()" style="background-color: #6c757d;">Cancelar</button>
+                </form>
+            </div>
+            <div id="list-container" style="margin-top: 2rem; border-top: 1px solid #ccc; padding-top: 2rem;">
+                <div class="tab-nav">
+                    <button onclick="mostrarListaUsuarios('ativos', this)" class="active">Ativos</button>
+                    <button onclick="mostrarListaUsuarios('inativos', this)">Inativos</button>
+                </div>
+                <h3>Usuários <span id="lista-status-titulo">Ativos</span></h3>
+                <table>
+                    <thead>
+                        <tr id="user-list-header"></tr>
+                    </thead>
+                    <tbody id="user-list-body"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="perfis-section" class="content-section">
+            <h2>Gestão de Perfis</h2>
+            <ul id="lista-perfis" class="generic-list"></ul>
+            <div class="form-inline">
+                <input type="text" id="novo-perfil-nome" placeholder="Nome do novo perfil" class="form-group input">
+                <button id="btn-salvar-perfil" class="btn">Adicionar Perfil</button>
+            </div>
+        </section>
+        
+        <section id="motivos-section" class="content-section">
+            <h2>Gestão de Motivos de Ausência</h2>
+            <ul id="lista-motivos" class="generic-list"></ul>
+            <div class="form-inline">
+                <input type="text" id="novo-motivo-nome" placeholder="Nome do novo motivo" class="form-group input">
+                <label>
+                    <input type="checkbox" id="novo-motivo-desconto" checked>
+                    Gera Desconto
+                </label>
+                <button id="btn-salvar-motivo" class="btn">Adicionar Motivo</button>
+            </div>
+        </section>
+        
+        <section id="feriados-section" class="content-section">
+            <h2>Gestão de Feriados e Dias Não Úteis</h2>
+            <div class="form-inline">
+                <input type="date" id="novo-feriado-data" class="form-group input">
+                <input type="text" id="novo-feriado-descricao" placeholder="Descrição (Ex: Natal)" class="form-group input">
+                <button id="btn-salvar-feriado" class="btn">Adicionar</button>
+            </div>
+            <table style="margin-top: 2rem;">
+                <thead><tr><th>Data</th><th>Descrição</th><th>Ações</th></tr></thead>
+                <tbody id="lista-feriados"></tbody>
+            </table>
+        </section>
+        
+        <section id="relatorios-section" class="content-section">
+            <h2>Relatórios Financeiros</h2>
+            <div class="form-grid">
+                 <div class="form-group">
+                    <label for="data-inicio-relatorio">Data Inicial:</label>
+                    <input type="date" id="data-inicio-relatorio">
+                </div>
+                <div class="form-group">
+                    <label for="data-fim-relatorio">Data Final:</label>
+                    <input type="date" id="data-fim-relatorio">
+                </div>
+            </div>
+            <div style="margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 1rem;">
+                <button onclick="gerarRelatorio('previsao')" class="btn" style="background-color:#17a2b8;">Gerar Previsão</button>
+                <button onclick="gerarRelatorio('descontos')" class="btn" style="background-color:#dc3545;">Gerar Descontos</button>
+                <button onclick="gerarRelatorio('final')" class="btn">Gerar Relatório Final</button>
+            </div>
+            <div id="resultado-relatorio" style="margin-top: 2rem;">
+                <p>Selecione um período e um tipo de relatório para começar.</p>
+            </div>
+        </section>
+    </main>
+</div>
+
+<script>
+    const apiUrl = 'https://controle-presenca-448646307036.herokuapp.com/api';
+    const token = localStorage.getItem('token');
+    const userProfile = localStorage.getItem('userProfile');
+
+    if (!token || userProfile !== 'Diretoria') {
+        alert('Acesso negado. Você não tem permissão para ver esta página.');
+        window.location.href = 'index.html';
+    }
+
+    // --- LÓGICA GERAL DA PÁGINA ---
+    function mostrarSecao(idSecao, menuItem) {
+        document.querySelectorAll('.content-section').forEach(section => section.classList.remove('active'));
+        document.getElementById(`${idSecao}-section`).classList.add('active');
+        if (menuItem) {
+            document.querySelectorAll('.nav-menu li').forEach(li => li.classList.remove('active'));
+            menuItem.classList.add('active');
+        }
+    }
+
+    // --- LÓGICA DE GESTÃO DE USUÁRIOS ---
+    const userForm = document.getElementById('user-form');
+    const formTitle = document.getElementById('form-title');
+    const userIdInput = document.getElementById('user_id');
+    const senhaGroup = document.getElementById('senha-group');
+    const userListBody = document.getElementById('user-list-body');
+    const userListHeader = document.getElementById('user-list-header');
+    const listaStatusTitulo = document.getElementById('lista-status-titulo');
+    const selectPerfil = document.getElementById('perfil_id');
+    const selectSupervisor = document.getElementById('supervisor_id');
+
+    function resetForm() {
+        userForm.reset();
+        userIdInput.value = '';
+        formTitle.textContent = 'Cadastrar Novo Usuário';
+        document.getElementById('senha').placeholder = 'Senha Provisória';
+        document.getElementById('senha').required = true;
+    }
+
+    function mostrarListaUsuarios(status, tabElement) {
+        if (tabElement) {
+            document.querySelectorAll('.tab-nav button').forEach(btn => btn.classList.remove('active'));
+            tabElement.classList.add('active');
+        }
+        listaStatusTitulo.textContent = status === 'ativos' ? 'Ativos' : 'Inativos';
+        carregarUsuarios(status);
+    }
+
+    async function carregarUsuarios(status = 'ativos') {
+        try {
+            const response = await fetch(`${apiUrl}/gestao/usuarios/${status}`, { headers: { 'x-auth-token': token } });
+            const usuarios = await response.json();
+            userListBody.innerHTML = ''; 
+            if (status === 'ativos') {
+                userListHeader.innerHTML = '<th>Nome</th><th>E-mail</th><th>Perfil</th><th>Líder Imediato</th><th>Ações</th>';
+                usuarios.forEach(user => {
+                    userListBody.innerHTML += `<tr><td>${user.nome_completo}</td><td>${user.email}</td><td>${user.perfil}</td><td>${user.supervisor || 'N/A'}</td><td class="actions-cell"><button class="btn-edit" title="Editar" onclick="iniciarEdicao(${user.id})">Editar</button><button class="btn-delete" title="Inativar" onclick="inativarUsuario(${user.id})">Inativar</button></td></tr>`;
+                });
+            } else { 
+                userListHeader.innerHTML = '<th>Nome</th><th>E-mail</th><th>Perfil</th><th>Ações</th>';
+                usuarios.forEach(user => {
+                    userListBody.innerHTML += `<tr><td>${user.nome_completo}</td><td>${user.email}</td><td>${user.perfil}</td><td class="actions-cell"><button class="btn-reactivate" title="Reativar" onclick="reativarUsuario(${user.id})">Reativar</button></td></tr>`;
+                });
+            }
+        } catch (error) { console.error("Erro ao carregar usuários:", error); }
+    }
+
+    async function carregarDadosParaFormulario() {
+        selectPerfil.innerHTML = '';
+        selectSupervisor.innerHTML = '<option value="">Nenhum</option>';
+        try {
+            const resPerfis = await fetch(`${apiUrl}/perfis`, { headers: { 'x-auth-token': token } });
+            const perfis = await resPerfis.json();
+            perfis.forEach(perfil => selectPerfil.add(new Option(perfil.nome, perfil.id)));
+        } catch (error) { console.error('Erro ao carregar perfis no form:', error); }
+        try {
+            const resSupervisores = await fetch(`${apiUrl}/gestao/supervisores`, { headers: { 'x-auth-token': token } });
+            const supervisores = await resSupervisores.json();
+            supervisores.forEach(sup => selectSupervisor.add(new Option(sup.nome_completo, sup.id)));
+        } catch (error) { console.error('Erro ao carregar supervisores:', error); }
+    }
+
+    async function iniciarEdicao(id) {
+        resetForm();
+        try {
+            const response = await fetch(`${apiUrl}/gestao/usuarios/${id}`, { headers: { 'x-auth-token': token } });
+            if (!response.ok) throw new Error('Falha ao buscar dados do usuário.');
+            const user = await response.json();
+            formTitle.textContent = 'Editando Usuário';
+            userIdInput.value = user.id;
+            document.getElementById('nome_completo').value = user.nome_completo;
+            document.getElementById('cpf').value = user.cpf;
+            document.getElementById('email').value = user.email;
+            selectPerfil.value = user.perfil_id;
+            selectSupervisor.value = user.supervisor_id || '';
+            document.getElementById('valor_almoco').value = user.valor_almoco;
+            document.getElementById('valor_passagem').value = user.valor_passagem;
+            document.getElementById('senha').placeholder = 'Deixe em branco para não alterar';
+            document.getElementById('senha').required = false;
+            window.scrollTo(0, 0);
+        } catch(error) { alert(error.message); }
+    }
+
+    userForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const id = userIdInput.value;
+        const isEditing = !!id;
+        let url = `${apiUrl}/gestao/usuarios`;
+        let method = 'POST';
+        const body = {
+            nome_completo: document.getElementById('nome_completo').value,
+            cpf: document.getElementById('cpf').value,
+            email: document.getElementById('email').value,
+            perfil_id: selectPerfil.value,
+            supervisor_id: selectSupervisor.value || null,
+            valor_almoco: document.getElementById('valor_almoco').value,
+            valor_passagem: document.getElementById('valor_passagem').value,
+        };
+        const senha = document.getElementById('senha').value;
+        if (isEditing) {
+            url = `${apiUrl}/gestao/usuarios/${id}`;
+            method = 'PUT';
+            if (senha && senha.trim() !== '') {
+                body.senha = senha;
+            }
+        } else {
+            body.senha = senha;
+            if (!body.senha) { return alert('A senha é obrigatória para novos usuários.'); }
+        }
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                body: JSON.stringify(body)
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.msg);
+            alert(`Usuário ${isEditing ? 'atualizado' : 'cadastrado'} com sucesso!`);
+            resetForm();
+            mostrarListaUsuarios('ativos', document.querySelector('.tab-nav button.active'));
+            carregarDadosParaFormulario();
+        } catch (error) { alert(`Erro: ${error.message}`); }
+    });
+
+    async function inativarUsuario(id) {
+        if (!confirm('Tem certeza que deseja INATIVAR este usuário?')) return;
+        try {
+            const response = await fetch(`${apiUrl}/gestao/usuarios/${id}`, { method: 'DELETE', headers: { 'x-auth-token': token } });
+            if (!response.ok) throw new Error('Falha ao inativar usuário.');
+            alert('Usuário inativado com sucesso.');
+            mostrarListaUsuarios('ativos', document.querySelector('.tab-nav button.active'));
+        } catch(error) { alert(error.message); }
+    }
+
+    async function reativarUsuario(id) {
+        if (!confirm('Tem certeza que deseja REATIVAR este usuário?')) return;
+        try {
+            const response = await fetch(`${apiUrl}/gestao/usuarios/${id}/reativar`, { method: 'PUT', headers: { 'x-auth-token': token } });
+            if (!response.ok) throw new Error('Falha ao reativar usuário.');
+            alert('Usuário reativado com sucesso.');
+            mostrarListaUsuarios('ativos', document.querySelector('.tab-nav button'));
+        } catch(error) { alert(error.message); }
+    }
+
+    // --- LÓGICA DE GESTÃO DE PERFIS ---
+    const listaPerfisUl = document.getElementById('lista-perfis');
+    async function carregarPerfis() {
+        try {
+            const response = await fetch(`${apiUrl}/perfis`, { headers: { 'x-auth-token': token } });
+            const perfis = await response.json();
+            listaPerfisUl.innerHTML = '';
+            perfis.forEach(perfil => {
+                const li = document.createElement('li');
+                li.innerHTML = `<span>${perfil.nome}</span><div class="generic-list-actions"><button class="btn-edit" onclick="editarPerfil(${perfil.id}, '${perfil.nome}')">Editar</button><button class="btn-delete" onclick="excluirPerfil(${perfil.id})">Excluir</button></div>`;
+                listaPerfisUl.appendChild(li);
+            });
+        } catch (error) { console.error('Erro ao carregar perfis:', error); }
+    }
+    document.getElementById('btn-salvar-perfil').addEventListener('click', async () => {
+        const nome = document.getElementById('novo-perfil-nome').value.trim();
+        if (!nome) return alert('Por favor, digite um nome para o perfil.');
+        try {
+            const response = await fetch(`${apiUrl}/perfis`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-auth-token': token }, body: JSON.stringify({ nome }) });
+            if (!response.ok) throw new Error('Falha ao criar perfil.');
+            document.getElementById('novo-perfil-nome').value = '';
+            await carregarPerfis();
+            await carregarDadosParaFormulario();
+        } catch (error) { alert(error.message); }
+    });
+    async function editarPerfil(id, nomeAtual) {
+        const novoNome = prompt('Digite o novo nome para o perfil:', nomeAtual);
+        if (!novoNome || novoNome.trim() === '') return;
+        try {
+            const response = await fetch(`${apiUrl}/perfis/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-auth-token': token }, body: JSON.stringify({ nome: novoNome.trim() }) });
+            if (!response.ok) throw new Error('Falha ao atualizar perfil.');
+            await carregarPerfis();
+            await carregarDadosParaFormulario();
+        } catch (error) { alert(error.message); }
+    }
+    async function excluirPerfil(id) {
+        if (!confirm('Tem certeza que deseja excluir este perfil? Esta ação não pode ser desfeita.')) return;
+        try {
+            const response = await fetch(`${apiUrl}/perfis/${id}`, { method: 'DELETE', headers: { 'x-auth-token': token } });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.msg);
+            await carregarPerfis();
+            await carregarDadosParaFormulario();
+        } catch (error) { alert(error.message); }
+    }
+
+    // --- LÓGICA DE GESTÃO DE MOTIVOS DE AUSÊNCIA ---
+    const listaMotivosUl = document.getElementById('lista-motivos');
+    async function carregarMotivos() {
+        try {
+            const response = await fetch(`${apiUrl}/motivos`, { headers: { 'x-auth-token': token } });
+            const motivos = await response.json();
+            listaMotivosUl.innerHTML = '';
+            motivos.forEach(motivo => {
+                const statusDesconto = motivo.gera_desconto ? '<span style="color:red;">(Gera Desconto)</span>' : '<span style="color:green;">(Não Gera Desconto)</span>';
+                const li = document.createElement('li');
+                li.innerHTML = `<span>${motivo.motivo} ${statusDesconto}</span>
+                    <div class="generic-list-actions">
+                        <button class="btn-edit" onclick="editarMotivo(${motivo.id}, '${motivo.motivo}')">Editar</button>
+                        <button class="btn-delete" onclick="excluirMotivo(${motivo.id})">Excluir</button>
+                    </div>`;
+                listaMotivosUl.appendChild(li);
+            });
+        } catch (error) { console.error('Erro ao carregar motivos:', error); }
+    }
+    document.getElementById('btn-salvar-motivo').addEventListener('click', async () => {
+        const motivo = document.getElementById('novo-motivo-nome').value.trim();
+        const gera_desconto = document.getElementById('novo-motivo-desconto').checked;
+        if (!motivo) return alert('Por favor, digite um nome para o motivo.');
+        try {
+            await fetch(`${apiUrl}/motivos`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                body: JSON.stringify({ motivo, gera_desconto })
+            });
+            document.getElementById('novo-motivo-nome').value = '';
+            document.getElementById('novo-motivo-desconto').checked = true;
+            carregarMotivos();
+        } catch (error) { alert(error.message); }
+    });
+    async function editarMotivo(id, nomeAtual) {
+        const novoNome = prompt('Digite o novo nome para o motivo:', nomeAtual);
+        if (!novoNome || novoNome.trim() === '') return;
+        const gera_desconto = confirm('Este motivo deve gerar desconto no pagamento? \n\nClique em "OK" para SIM, ou "Cancelar" para NÃO.');
+        try {
+            await fetch(`${apiUrl}/motivos/${id}`, {
+                method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                body: JSON.stringify({ motivo: novoNome.trim(), gera_desconto })
+            });
+            carregarMotivos();
+        } catch (error) { alert(error.message); }
+    }
+    async function excluirMotivo(id) {
+        if (!confirm('Tem certeza que deseja excluir este motivo?')) return;
+        try {
+            const response = await fetch(`${apiUrl}/motivos/${id}`, { method: 'DELETE', headers: { 'x-auth-token': token } });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.msg);
+            carregarMotivos();
+        } catch (error) { alert(error.message); }
+    }
+    
+    // --- LÓGICA DE GESTÃO DE FERIADOS ---
+    const listaFeriadosTbody = document.getElementById('lista-feriados');
+    async function carregarFeriados() {
+        try {
+            const response = await fetch(`${apiUrl}/dias-nao-uteis`, { headers: { 'x-auth-token': token } });
+            const feriados = await response.json();
+            listaFeriadosTbody.innerHTML = '';
+            feriados.forEach(feriado => {
+                const dataFormatada = new Date(feriado.data).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+                const row = `<tr><td>${dataFormatada}</td><td>${feriado.descricao}</td><td><button class="btn-delete" onclick="excluirFeriado(${feriado.id})">Excluir</button></td></tr>`;
+                listaFeriadosTbody.innerHTML += row;
+            });
+        } catch (error) { console.error('Erro ao carregar feriados:', error); }
+    }
+    document.getElementById('btn-salvar-feriado').addEventListener('click', async () => {
+        const data = document.getElementById('novo-feriado-data').value;
+        const descricao = document.getElementById('novo-feriado-descricao').value.trim();
+        if (!data || !descricao) return alert('A data e a descrição são obrigatórias.');
+        try {
+            await fetch(`${apiUrl}/dias-nao-uteis`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                body: JSON.stringify({ data, descricao })
+            });
+            document.getElementById('novo-feriado-data').value = '';
+            document.getElementById('novo-feriado-descricao').value = '';
+            carregarFeriados();
+        } catch (error) { alert(error.message); }
+    });
+    async function excluirFeriado(id) {
+        if (!confirm('Tem certeza que deseja excluir este dia?')) return;
+        try {
+            await fetch(`${apiUrl}/dias-nao-uteis/${id}`, {
+                method: 'DELETE', headers: { 'x-auth-token': token }
+            });
+            carregarFeriados();
+        } catch (error) { alert(error.message); }
+    }
+    
+    // --- LÓGICA DE RELATÓRIOS ---
+    async function gerarRelatorio(tipo) {
+        const dataInicio = document.getElementById('data-inicio-relatorio').value;
+        const dataFim = document.getElementById('data-fim-relatorio').value;
+        if (!dataInicio || !dataFim) { return alert('Por favor, selecione a data inicial e final.'); }
+
+        const container = document.getElementById('resultado-relatorio');
+        container.innerHTML = '<p>Gerando relatório, aguarde...</p>';
+        
+        let url = '';
+        switch (tipo) {
+            case 'previsao':
+                url = `${apiUrl}/relatorios/previsao?dataInicio=${dataInicio}&dataFim=${dataFim}`;
+                break;
+            case 'descontos':
+                url = `${apiUrl}/relatorios/descontos?dataInicio=${dataInicio}&dataFim=${dataFim}`;
+                break;
+            case 'final':
+                url = `${apiUrl}/relatorios/semanal?dataInicio=${dataInicio}&dataFim=${dataFim}`;
+                break;
+            default:
+                container.innerHTML = '<p style="color:red;">Tipo de relatório inválido.</p>';
+                return;
+        }
+
+        try {
+            const response = await fetch(url, { headers: { 'x-auth-token': token } });
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.msg || 'Falha ao gerar o relatório.');
+            }
+            const relatorio = await response.json();
+            renderizarTabelaRelatorio(tipo, relatorio);
+        } catch(error) {
+            container.innerHTML = `<p style="color:red;">${error.message}</p>`;
+        }
+    }
+
+    function renderizarTabelaRelatorio(tipo, relatorio) {
+        const container = document.getElementById('resultado-relatorio');
+        const inicioFormatado = new Date(relatorio.periodo.inicio + 'T03:00:00Z').toLocaleDateString('pt-BR');
+        const fimFormatado = new Date(relatorio.periodo.fim + 'T03:00:00Z').toLocaleDateString('pt-BR');
+        const periodoFormatado = `<h3>Relatório do Período de ${inicioFormatado} a ${fimFormatado}</h3>`;
+        let html = '';
+
+        if (!relatorio.dados || relatorio.dados.length === 0) {
+            container.innerHTML = `${periodoFormatado}<p style="text-align:center;">Nenhum dado encontrado para este período.</p>`;
+            return;
+        }
+
+        switch (tipo) {
+            case 'previsao':
+                html = `${periodoFormatado}<h4>Dias úteis no período: ${relatorio.periodo.dias_uteis}</h4><table><thead><tr><th>Vendedor</th><th>Auxílio Diário</th><th>Previsão para o Período</th></tr></thead><tbody>`;
+                relatorio.dados.forEach(item => {
+                    html += `<tr><td>${item.nome_completo}</td><td>R$ ${Number(item.auxilio_diario).toFixed(2).replace('.',',')}</td><td><strong>R$ ${Number(item.previsao_periodo).toFixed(2).replace('.',',')}</strong></td></tr>`;
+                });
+                break;
+            case 'descontos':
+                html = `${periodoFormatado}<table><thead><tr><th>Vendedor</th><th>Data da Falta</th><th>Motivo</th><th>Valor a Descontar</th></tr></thead><tbody>`;
+                relatorio.dados.forEach(item => {
+                    const dataFalta = new Date(item.data).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+                    html += `<tr><td>${item.nome_completo}</td><td>${dataFalta}</td><td>${item.motivo}</td><td style="color:red;">R$ ${Number(item.valor_desconto).toFixed(2).replace('.',',')}</td></tr>`;
+                });
+                break;
+            case 'final':
+                html = `${periodoFormatado}<table><thead><tr><th>Vendedor</th><th>Dias Trabalhados</th><th>Faltas c/ Desconto</th><th>A Receber</th><th>A Descontar</th><th>Valor Final</th></tr></thead><tbody>`;
+                relatorio.dados.forEach(item => {
+                    html += `<tr><td>${item.nome_completo}</td><td>${item.dias_presente}</td><td>${item.dias_falta_com_desconto}</td><td>R$ ${Number(item.total_a_receber).toFixed(2).replace('.',',')}</td><td style="color:red;">R$ ${Number(item.total_a_descontar).toFixed(2).replace('.',',')}</td><td><strong>R$ ${Number(item.valor_final).toFixed(2).replace('.',',')}</strong></td></tr>`;
+                });
+                break;
+        }
+        html += `</tbody></table>`;
+        container.innerHTML = html;
+    }
+
+    // --- INICIALIZAÇÃO DA PÁGINA ---
+    document.addEventListener('DOMContentLoaded', () => {
+        carregarDadosParaFormulario();
+        carregarPerfis();
+        carregarMotivos();
+        carregarFeriados();
+        document.querySelector('.nav-menu li').click();
+    });
+
+    function logout() {
+        localStorage.removeItem('token');
+        localStorage.removeItem('userProfile');
+        window.location.href = 'index.html';
+    }
+</script>
+
+</body>
+</html>

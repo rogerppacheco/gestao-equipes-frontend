@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lançamento de Presença - Record PAP</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+        body { background-color: #e5e5e5; }
+        header { background-color: #fff; padding: 1rem 2rem; box-shadow: 0 2px 5px rgba(0,0,0,0.2); position: sticky; top: 0; z-index: 1000; }
+        .header-container { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .logo { max-width: 150px; height: auto; cursor: pointer; }
+        nav ul { list-style: none; display: flex; gap: 1.5rem; align-items: center; }
+        nav ul li a { text-decoration: none; color: #1a1a1a; font-weight: 500; }
+        .action-button { background-color: #1a1a1a; color: #fff; padding: 0.5rem 1rem; border-radius: 0.25rem; text-decoration: none; font-size: 0.9rem; font-weight: 600; cursor: pointer; border: 1px solid transparent;}
+        .logout-button { background-color: #dc3545; }
+        .whatsapp-chat a { display: inline-flex; align-items: center; text-decoration: none; color: #1a1a1a; }
+        .whatsapp-chat img { width: 20px; height: 20px; margin-right: 0.25rem; }
+        .main-content { padding: 3rem 1rem; background-color: #fff; text-align: center; min-height: 60vh; }
+        .container { max-width: 800px; margin: auto; }
+        h1 { text-align: center; color: #333; }
+        #data-hoje { font-size: 1.2rem; color: #555; text-align: center; margin-bottom: 2rem; }
+        .vendedor { display: flex; justify-content: space-between; align-items: center; padding: 1rem; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px; transition: all 0.3s; border-left: 5px solid #ccc; }
+        .vendedor h3 { margin: 0; font-size: 1.1rem; text-align: left; }
+        .vendedor .botoes button { margin-left: 10px; padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-presente { background-color: #28a745; color: white; }
+        .btn-ausente { background-color: #dc3545; color: white; }
+        .vendedor.presente { background-color: #d4edda; border-left-color: #28a745; }
+        .vendedor.ausente { background-color: #f8d7da; border-left-color: #dc3545; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 1001; }
+        .modal-content { background: white; padding: 2rem; border-radius: 8px; width: 90%; max-width: 450px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .modal-content h3 { margin-top: 0; }
+        .modal-content .form-group { margin-top: 1rem; }
+        .modal-content .form-group label { font-weight: bold; margin-bottom: 0.5rem; display: block; }
+        .modal-content .form-group select, .modal-content .form-group textarea { width: 100%; padding: 0.75rem; border-radius: 4px; border: 1px solid #ccc; }
+        .modal-actions { margin-top: 1.5rem; text-align: right; display: flex; gap: 1rem; justify-content: flex-end; }
+        .modal-actions button { padding: 0.6rem 1.2rem; border-radius: 4px; border: none; cursor: pointer; }
+        .btn-confirmar { background-color: #dc3545; color: white; }
+        .btn-cancelar { background-color: #6c757d; color: white; }
+        footer { background-color: #1a1a1a; color: #fff; padding: 2rem 1rem; text-align: center; }
+        footer p { font-size: 0.9rem; margin-bottom: 0.5rem; }
+        footer a { color: #b3b3b3; text-decoration: none; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-container">
+            <img src="logo.png" alt="Record PAP Logo" class="logo" onclick="window.location.href='index.html'">
+            <nav>
+                <ul>
+                    <li><a href="area-interna.html">Área Interna</a></li>
+                    <li class="whatsapp-chat">
+                        <a href="https://wa.me/31994588810" target="_blank">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp">
+                            Chat
+                        </a>
+                    </li>
+                    <li><button onclick="logout()" class="action-button logout-button">Sair</button></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            <h1>Lançamento de Presença</h1>
+            <p id="data-hoje"></p>
+            <div id="lista-vendedores">
+                <p>Carregando equipe...</p>
+            </div>
+        </div>
+    </main>
+    
+    <div id="modal-motivo" class="modal-overlay">
+        <div class="modal-content">
+            <h3 id="modal-title">Motivo da Ausência</h3>
+            <div class="form-group">
+                <label for="select-motivo">Motivo:</label>
+                <select id="select-motivo"></select>
+            </div>
+            <div class="form-group">
+                 <label for="obs-motivo">Observação (opcional):</label>
+                <textarea id="obs-motivo" rows="3" placeholder="Detalhes adicionais..."></textarea>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancelar" onclick="fecharModal()">Cancelar</button>
+                <button id="btn-confirmar-ausencia" class="btn-confirmar">Confirmar Ausência</button>
+            </div>
+        </div>
+    </div>
+
+    <footer id="contato">
+        <p>Record PAP - Internet Fibra Ótica</p>
+        <p>Contato: (31) 99458-8810 | E-mail: <a href="mailto:suporte@recordpap.com.br">suporte@recordpap.com.br</a></p>
+        <p><a href="politica-de-privacidade.html">Política de Privacidade</a> | <a href="#">Termos de Uso</a></p>
+    </footer>
+
+<script>
+    const apiUrl = 'https://controle-presenca-448646307036.herokuapp.com/api';
+    const token = localStorage.getItem('token');
+    let motivosDisponiveis = [];
+
+    function registrarStatus(vendedorId, nomeVendedor, status) {
+        if (status === 'Presente') {
+            lancarStatus(vendedorId, nomeVendedor, status);
+        } else {
+            abrirModalAusencia(vendedorId, nomeVendedor);
+        }
+    }
+
+    async function lancarStatus(vendedorId, nomeVendedor, status, detalhesAusencia = {}) {
+        const dataHoje = new Date().toISOString().split('T')[0];
+        const dadosParaEnviar = { vendedorId, data: dataHoje, status, ...detalhesAusencia };
+        try {
+            const response = await fetch(`${apiUrl}/presenca`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                body: JSON.stringify(dadosParaEnviar)
+            });
+            if (!response.ok) throw new Error('Não foi possível registrar a presença.');
+            const vendedorDiv = document.getElementById(`vendedor-${vendedorId}`);
+            vendedorDiv.innerHTML = `<h3>${nomeVendedor}</h3><p><strong>Status:</strong> ${status}</p>`;
+            vendedorDiv.className = `vendedor ${status.toLowerCase()}`;
+        } catch (error) {
+            console.error('Erro ao lançar presença:', error);
+            alert(error.message);
+        }
+    }
+
+    const modal = document.getElementById('modal-motivo');
+
+    function abrirModalAusencia(vendedorId, nomeVendedor) {
+        document.getElementById('modal-title').textContent = `Motivo da Ausência de ${nomeVendedor}`;
+        const selectMotivo = document.getElementById('select-motivo');
+        selectMotivo.innerHTML = '<option value="">Selecione um motivo...</option>';
+        motivosDisponiveis.forEach(m => selectMotivo.add(new Option(m.motivo, m.id)));
+        document.getElementById('obs-motivo').value = '';
+        modal.style.display = 'flex';
+        document.getElementById('btn-confirmar-ausencia').onclick = () => confirmarAusencia(vendedorId, nomeVendedor);
+    }
+
+    function fecharModal() {
+        modal.style.display = 'none';
+    }
+
+    function confirmarAusencia(vendedorId, nomeVendedor) {
+        const motivoId = document.getElementById('select-motivo').value;
+        const observacao = document.getElementById('obs-motivo').value;
+        if (!motivoId) { return alert('Por favor, selecione um motivo da lista.'); }
+        lancarStatus(vendedorId, nomeVendedor, 'Ausente', { motivoId, observacao });
+        fecharModal();
+    }
+    
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            fecharModal();
+        }
+    }
+
+    async function carregarDadosIniciais() {
+        if (!token) {
+            window.location.href = 'index.html?login=true';
+            return;
+        }
+        try {
+            const resMotivos = await fetch(`${apiUrl}/motivos`, { headers: { 'x-auth-token': token } });
+            motivosDisponiveis = await resMotivos.json();
+        } catch (error) {
+            console.error("Falha ao carregar motivos de ausência.", error);
+        }
+
+        try {
+            const resEquipe = await fetch(`${apiUrl}/presenca/minha-equipe`, { headers: { 'x-auth-token': token } });
+            if (resEquipe.status === 401) throw new Error('Acesso negado. Faça login novamente.');
+            if (!resEquipe.ok) throw new Error('Falha ao buscar equipe.');
+            
+            const vendedores = await resEquipe.json();
+            const listaDiv = document.getElementById('lista-vendedores');
+            listaDiv.innerHTML = '';
+
+            if (vendedores.length === 0) {
+                listaDiv.innerHTML = '<p>Você não possui vendedores associados à sua equipe.</p>';
+                return;
+            }
+
+            vendedores.forEach(vendedor => {
+                const vendedorDiv = document.createElement('div');
+                vendedorDiv.className = 'vendedor';
+                vendedorDiv.id = `vendedor-${vendedor.id}`;
+                vendedorDiv.innerHTML = `
+                    <h3>${vendedor.nome_completo}</h3>
+                    <div class="botoes">
+                        <button class="btn-presente" onclick="registrarStatus(${vendedor.id}, '${vendedor.nome_completo}', 'Presente')">Presente</button>
+                        <button class="btn-ausente" onclick="registrarStatus(${vendedor.id}, '${vendedor.nome_completo}', 'Ausente')">Ausente</button>
+                    </div>
+                `;
+                listaDiv.appendChild(vendedorDiv);
+            });
+        } catch (error) {
+            console.error('Erro:', error);
+            alert(error.message);
+            logout();
+        }
+    }
+
+    function logout() {
+        localStorage.removeItem('token');
+        localStorage.removeItem('userProfile');
+        window.location.href = 'index.html';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const hoje = new Date();
+        const dia = String(hoje.getDate()).padStart(2, '0');
+        const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+        const ano = hoje.getFullYear();
+        document.getElementById('data-hoje').textContent = `Data de Hoje: ${dia}/${mes}/${ano}`;
+        carregarDadosIniciais();
+    });
+</script>
+</body>
+</html>
