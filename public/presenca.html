@@ -90,14 +90,18 @@
         </div>
     </div>
 
-    <footer id="contato">
+    <footer>
         <p>Record PAP - Internet Fibra Ótica</p>
         <p>Contato: (31) 99458-8810 | E-mail: <a href="mailto:suporte@recordpap.com.br">suporte@recordpap.com.br</a></p>
         <p><a href="politica-de-privacidade.html">Política de Privacidade</a> | <a href="#">Termos de Uso</a></p>
     </footer>
 
 <script>
-    const apiUrl = 'https://controle-presenca-448646307036.herokuapp.com/api';
+    // TORNA A API_URL DINÂMICA PARA AMBIENTE LOCAL E DE PRODUÇÃO
+    const apiUrl = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost'
+        ? 'http://localhost:5000/api' // URL do seu backend local
+        : 'https://controle-presenca-448646307036.herokuapp.com/api'; // URL do seu backend em produção
+
     const token = localStorage.getItem('token');
     let motivosDisponiveis = [];
 
@@ -111,14 +115,17 @@
 
     async function lancarStatus(vendedorId, nomeVendedor, status, detalhesAusencia = {}) {
         const dataHoje = new Date().toISOString().split('T')[0];
-        const dadosParaEnviar = { vendedorId, data: dataHoje, status, ...detalhesAusencia };
+        const dadosParaEnviar = { usuarioId: vendedorId, data: dataHoje, status, motivoId: detalhesAusencia.motivoId || null, observacao: detalhesAusencia.observacao || null }; // Ajusta para 'usuarioId' e campos nulos
         try {
             const response = await fetch(`${apiUrl}/presenca`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
                 body: JSON.stringify(dadosParaEnviar)
             });
-            if (!response.ok) throw new Error('Não foi possível registrar a presença.');
+            if (!response.ok) {
+                const errorData = await response.json(); // Tenta ler a mensagem de erro do backend
+                throw new Error(errorData.msg || 'Não foi possível registrar a presença.');
+            }
             const vendedorDiv = document.getElementById(`vendedor-${vendedorId}`);
             vendedorDiv.innerHTML = `<h3>${nomeVendedor}</h3><p><strong>Status:</strong> ${status}</p>`;
             vendedorDiv.className = `vendedor ${status.toLowerCase()}`;
@@ -165,15 +172,28 @@
         }
         try {
             const resMotivos = await fetch(`${apiUrl}/motivos`, { headers: { 'x-auth-token': token } });
+            // Adiciona log para depuração do CORS
+            if (!resMotivos.ok) {
+                console.error("Status da resposta de motivos:", resMotivos.status);
+                const errorText = await resMotivos.text();
+                console.error("Conteúdo do erro de motivos:", errorText);
+                throw new Error('Falha ao carregar motivos de ausência. Status: ' + resMotivos.status);
+            }
             motivosDisponiveis = await resMotivos.json();
         } catch (error) {
             console.error("Falha ao carregar motivos de ausência.", error);
+            alert("Erro ao carregar motivos de ausência: " + error.message);
         }
 
         try {
             const resEquipe = await fetch(`${apiUrl}/presenca/minha-equipe`, { headers: { 'x-auth-token': token } });
-            if (resEquipe.status === 401) throw new Error('Acesso negado. Faça login novamente.');
-            if (!resEquipe.ok) throw new Error('Falha ao buscar equipe.');
+            if (!resEquipe.ok) {
+                console.error("Status da resposta de equipe:", resEquipe.status);
+                const errorText = await resEquipe.text();
+                console.error("Conteúdo do erro de equipe:", errorText);
+                if (resEquipe.status === 401) throw new Error('Acesso negado. Faça login novamente.');
+                throw new Error('Falha ao buscar equipe. Status: ' + resEquipe.status);
+            }
             
             const vendedores = await resEquipe.json();
             const listaDiv = document.getElementById('lista-vendedores');
@@ -198,9 +218,9 @@
                 listaDiv.appendChild(vendedorDiv);
             });
         } catch (error) {
-            console.error('Erro:', error);
-            alert(error.message);
-            logout();
+            console.error('Erro ao carregar equipe:', error);
+            alert("Erro ao carregar equipe: " + error.message);
+            // logout(); // Removido para evitar loop de redirecionamento em caso de erros que não sejam 401
         }
     }
 

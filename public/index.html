@@ -354,11 +354,6 @@
             <h2>Nossos Planos</h2>
             <div class="planos-grid">
                 <div class="plano">
-                    <h3>200 Mbps</h3>
-                    <p>Ideal para uso intensivo e streaming em alta qualidade.</p>
-                    <a href="https://wa.me/31994588810?text=Quero%20o%20plano%20de%20200%20Mbps" target="_blank">Contratar</a>
-                </div>
-                <div class="plano">
                     <h3>500 Mbps</h3>
                     <p>Perfeito para múltiplos dispositivos e jogos online.</p>
                     <a href="https://wa.me/31994588810?text=Quero%20o%20plano%20de%20500%20Mbps" target="_blank">Contratar</a>
@@ -405,7 +400,17 @@
 
     <script>
         window.onload = function() {
-            const apiUrl = 'https://controle-presenca-448646307036.herokuapp.com/api';
+            // URL params precisa ser definida aqui para ser usada no onload
+            const urlParams = new URLSearchParams(window.location.search); // Definido aqui
+            
+            // TORNA A API_URL DINÂMICA PARA AMBIENTE LOCAL E DE PRODUÇÃO
+            const apiUrl = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost'
+                ? 'http://localhost:5000/api' // URL do seu backend local
+                : 'https://controle-presenca-448646307036.herokuapp.com/api'; // URL do seu backend em produção
+
+            // Define apiUrl no escopo global para login()
+            window.apiUrl = apiUrl; 
+
             if (urlParams.get('login') === 'true') {
                 showLoginModal();
             }
@@ -416,14 +421,17 @@
         }
 
         async function login() {
-            const email = document.getElementById('username').value;
-            const senha = document.getElementById('password').value;
+            // Usa .trim() para remover espaços em branco do início/fim do e-mail
+            const email = document.getElementById('username').value.trim(); 
+            const senha = document.getElementById('password').value; // Senha não precisa de trim()
+
             if (!email || !senha) {
                 return alert('Por favor, preencha o e-mail e a senha.');
             }
 
             try {
-                const response = await fetch('http://localhost:5000/api/auth/login', {
+                // Usa window.apiUrl que foi definida globalmente no onload
+                const response = await fetch(`${window.apiUrl}/auth/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, senha })
