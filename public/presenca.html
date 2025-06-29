@@ -107,15 +107,24 @@
 
     function registrarStatus(vendedorId, nomeVendedor, status) {
         if (status === 'Presente') {
-            lancarStatus(vendedorId, nomeVendedor, status);
+            // CORRIGIDO: Envia status como booleano true
+            lancarStatus(vendedorId, nomeVendedor, true);
         } else {
+            // CORRIGIDO: Abre modal, que depois chamará lancarStatus com booleano false
             abrirModalAusencia(vendedorId, nomeVendedor);
         }
     }
 
     async function lancarStatus(vendedorId, nomeVendedor, status, detalhesAusencia = {}) {
         const dataHoje = new Date().toISOString().split('T')[0];
-        const dadosParaEnviar = { usuarioId: vendedorId, data: dataHoje, status, motivoId: detalhesAusencia.motivoId || null, observacao: detalhesAusencia.observacao || null }; // Ajusta para 'usuarioId' e campos nulos
+        // CORRIGIDO: status já é um booleano aqui, e motivoId/observacao são tratados condicionalmente
+        const dadosParaEnviar = {
+            usuarioId: vendedorId,
+            data: dataHoje,
+            status: status, // Este 'status' é o booleano (true/false)
+            motivoId: status === false ? detalhesAusencia.motivoId : null,
+            observacao: status === false ? (detalhesAusencia.observacao || null) : null
+        };
         try {
             const response = await fetch(`${apiUrl}/presenca`, {
                 method: 'POST',
@@ -127,8 +136,9 @@
                 throw new Error(errorData.msg || 'Não foi possível registrar a presença.');
             }
             const vendedorDiv = document.getElementById(`vendedor-${vendedorId}`);
-            vendedorDiv.innerHTML = `<h3>${nomeVendedor}</h3><p><strong>Status:</strong> ${status}</p>`;
-            vendedorDiv.className = `vendedor ${status.toLowerCase()}`;
+            // CORRIGIDO: Atualiza a UI usando o booleano 'status' para definir a classe e texto
+            vendedorDiv.innerHTML = `<h3>${nomeVendedor}</h3><p><strong>Status:</strong> ${status ? 'Presente' : 'Ausente'}</p>`;
+            vendedorDiv.className = `vendedor ${status ? 'presente' : 'ausente'}`;
         } catch (error) {
             console.error('Erro ao lançar presença:', error);
             alert(error.message);
@@ -155,7 +165,8 @@
         const motivoId = document.getElementById('select-motivo').value;
         const observacao = document.getElementById('obs-motivo').value;
         if (!motivoId) { return alert('Por favor, selecione um motivo da lista.'); }
-        lancarStatus(vendedorId, nomeVendedor, 'Ausente', { motivoId, observacao });
+        // CORRIGIDO: Chama lancarStatus com booleano false para ausente
+        lancarStatus(vendedorId, nomeVendedor, false, { motivoId, observacao });
         fecharModal();
     }
     
