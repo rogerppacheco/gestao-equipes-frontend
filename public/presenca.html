@@ -25,6 +25,9 @@
         .vendedor .botoes button { margin-left: 10px; padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .btn-presente { background-color: #28a745; color: white; }
         .btn-ausente { background-color: #dc3545; color: white; }
+        /* Novos estilos para botões desabilitados e textos de status */
+        .vendedor .botoes button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .vendedor .status-info { font-size: 0.9em; color: #666; margin-top: 5px; }
         .vendedor.presente { background-color: #d4edda; border-left-color: #28a745; }
         .vendedor.ausente { background-color: #f8d7da; border-left-color: #dc3545; }
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 1001; }
@@ -105,23 +108,42 @@
     const token = localStorage.getItem('token');
     let motivosDisponiveis = [];
 
+    // Função para atualizar o DOM do vendedor
+    function atualizarVendedorUI(vendedorDiv, vendedor, statusText, lancadoPorNome = null, geraDesconto = false) {
+        let statusDisplay = `<p><strong>Status:</strong> ${statusText}`;
+        if (lancadoPorNome) {
+            statusDisplay += ` (Lançado por: ${lancadoPorNome})`;
+        }
+        if (statusText === 'Ausente' && geraDesconto) {
+            statusDisplay += ` <span style="color: red;">(C/ Desconto)</span>`;
+        }
+        statusDisplay += `</p>`;
+
+        vendedorDiv.innerHTML = `<h3>${vendedor.nome_completo}</h3>${statusDisplay}`;
+        vendedorDiv.className = `vendedor ${statusText.toLowerCase()}`;
+
+        // Desabilita os botões após a marcação
+        const botoes = vendedorDiv.querySelector('.botoes');
+        if (botoes) { // Garante que os botões existem
+            botoes.innerHTML = ''; // Remove os botões
+        }
+    }
+
+
     function registrarStatus(vendedorId, nomeVendedor, status) {
         if (status === 'Presente') {
-            // CORRIGIDO: Envia status como booleano true
-            lancarStatus(vendedorId, nomeVendedor, true);
+            lancarStatus(vendedorId, nomeVendedor, true); // Envia booleano true
         } else {
-            // CORRIGIDO: Abre modal, que depois chamará lancarStatus com booleano false
-            abrirModalAusencia(vendedorId, nomeVendedor);
+            abrirModalAusencia(vendedorId, nomeVendedor); // Abre modal, que depois chamará lancarStatus com booleano false
         }
     }
 
     async function lancarStatus(vendedorId, nomeVendedor, status, detalhesAusencia = {}) {
         const dataHoje = new Date().toISOString().split('T')[0];
-        // CORRIGIDO: status já é um booleano aqui, e motivoId/observacao são tratados condicionalmente
         const dadosParaEnviar = {
             usuarioId: vendedorId,
             data: dataHoje,
-            status: status, // Este 'status' é o booleano (true/false)
+            status: status,
             motivoId: status === false ? detalhesAusencia.motivoId : null,
             observacao: status === false ? (detalhesAusencia.observacao || null) : null
         };
@@ -132,13 +154,16 @@
                 body: JSON.stringify(dadosParaEnviar)
             });
             if (!response.ok) {
-                const errorData = await response.json(); // Tenta ler a mensagem de erro do backend
+                const errorData = await response.json(); 
                 throw new Error(errorData.msg || 'Não foi possível registrar a presença.');
             }
             const vendedorDiv = document.getElementById(`vendedor-${vendedorId}`);
-            // CORRIGIDO: Atualiza a UI usando o booleano 'status' para definir a classe e texto
-            vendedorDiv.innerHTML = `<h3>${nomeVendedor}</h3><p><strong>Status:</strong> ${status ? 'Presente' : 'Ausente'}</p>`;
-            vendedorDiv.className = `vendedor ${status ? 'presente' : 'ausente'}`;
+            // NOVO: Atualiza a UI para o estado 'marcado' imediatamente após o sucesso
+            const statusText = status ? 'Presente' : 'Ausente';
+            const userProfile = localStorage.getItem('userProfile'); // Para pegar o nome do lançador
+            const lancador = userProfile === 'Diretoria' || userProfile === 'Supervisor' ? 'Você' : null; // Simples
+            atualizarVendedorUI(vendedorDiv, { nome_completo: nomeVendedor }, statusText, lancador, detalhesAusencia.geraDesconto); // Passa 'geraDesconto'
+
         } catch (error) {
             console.error('Erro ao lançar presença:', error);
             alert(error.message);
@@ -154,22 +179,23 @@
         motivosDisponiveis.forEach(m => selectMotivo.add(new Option(m.motivo, m.id)));
         document.getElementById('obs-motivo').value = '';
         modal.style.display = 'flex';
-        document.getElementById('btn-confirmar-ausencia').onclick = () => confirmarAusencia(vendedorId, nomeVendedor);
+        // Captura o gera_desconto do motivo selecionado para passar para lancarStatus
+        document.getElementById('btn-confirmar-ausencia').onclick = () => {
+            const motivoId = document.getElementById('select-motivo').value;
+            const observacao = document.getElementById('obs-motivo').value;
+            const motivoSelecionado = motivosDisponiveis.find(m => m.id == motivoId);
+            const geraDesconto = motivoSelecionado ? motivoSelecionado.gera_desconto : false;
+
+            if (!motivoId) { return alert('Por favor, selecione um motivo da lista.'); }
+            lancarStatus(vendedorId, nomeVendedor, false, { motivoId, observacao, geraDesconto });
+            fecharModal();
+        };
     }
 
     function fecharModal() {
         modal.style.display = 'none';
     }
 
-    function confirmarAusencia(vendedorId, nomeVendedor) {
-        const motivoId = document.getElementById('select-motivo').value;
-        const observacao = document.getElementById('obs-motivo').value;
-        if (!motivoId) { return alert('Por favor, selecione um motivo da lista.'); }
-        // CORRIGIDO: Chama lancarStatus com booleano false para ausente
-        lancarStatus(vendedorId, nomeVendedor, false, { motivoId, observacao });
-        fecharModal();
-    }
-    
     window.onclick = function(event) {
         if (event.target == modal) {
             fecharModal();
@@ -183,7 +209,6 @@
         }
         try {
             const resMotivos = await fetch(`${apiUrl}/motivos`, { headers: { 'x-auth-token': token } });
-            // Adiciona log para depuração do CORS
             if (!resMotivos.ok) {
                 console.error("Status da resposta de motivos:", resMotivos.status);
                 const errorText = await resMotivos.text();
@@ -217,21 +242,30 @@
 
             vendedores.forEach(vendedor => {
                 const vendedorDiv = document.createElement('div');
-                vendedorDiv.className = 'vendedor';
                 vendedorDiv.id = `vendedor-${vendedor.id}`;
-                vendedorDiv.innerHTML = `
-                    <h3>${vendedor.nome_completo}</h3>
-                    <div class="botoes">
-                        <button class="btn-presente" onclick="registrarStatus(${vendedor.id}, '${vendedor.nome_completo}', 'Presente')">Presente</button>
-                        <button class="btn-ausente" onclick="registrarStatus(${vendedor.id}, '${vendedor.nome_completo}', 'Ausente')">Ausente</button>
-                    </div>
-                `;
+
+                // NOVO: Verifica se o status para o dia atual já foi marcado
+                if (vendedor.hoje_status !== null) {
+                    const statusText = vendedor.hoje_status === true ? 'Presente' : 'Ausente';
+                    const lancadoPor = vendedor.hoje_lancado_por || 'Desconhecido';
+                    const geraDesconto = vendedor.hoje_gera_desconto;
+                    atualizarVendedorUI(vendedorDiv, vendedor, statusText, lancadoPor, geraDesconto);
+                } else {
+                    // Se não houver status para hoje, mostra os botões para marcar
+                    vendedorDiv.className = 'vendedor'; // Classe padrão
+                    vendedorDiv.innerHTML = `
+                        <h3>${vendedor.nome_completo}</h3>
+                        <div class="botoes">
+                            <button class="btn-presente" onclick="registrarStatus(${vendedor.id}, '${vendedor.nome_completo}', 'Presente')">Presente</button>
+                            <button class="btn-ausente" onclick="registrarStatus(${vendedor.id}, '${vendedor.nome_completo}', 'Ausente')">Ausente</button>
+                        </div>
+                    `;
+                }
                 listaDiv.appendChild(vendedorDiv);
             });
         } catch (error) {
             console.error('Erro ao carregar equipe:', error);
             alert("Erro ao carregar equipe: " + error.message);
-            // logout(); // Removido para evitar loop de redirecionamento em caso de erros que não sejam 401
         }
     }
 
