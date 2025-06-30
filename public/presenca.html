@@ -30,19 +30,23 @@
         .vendedor .status-info { font-size: 0.9em; color: #666; margin-top: 5px; }
         .vendedor.presente { background-color: #d4edda; border-left-color: #28a745; }
         .vendedor.ausente { background-color: #f8d7da; border-left-color: #dc3545; }
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 1001; }
-        .modal-content { background: white; padding: 2rem; border-radius: 8px; width: 90%; max-width: 450px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-        .modal-content h3 { margin-top: 0; }
-        .modal-content .form-group { margin-top: 1rem; }
-        .modal-content .form-group label { font-weight: bold; margin-bottom: 0.5rem; display: block; }
-        .modal-content .form-group select, .modal-content .form-group textarea { width: 100%; padding: 0.75rem; border-radius: 4px; border: 1px solid #ccc; }
-        .modal-actions { margin-top: 1.5rem; text-align: right; display: flex; gap: 1rem; justify-content: flex-end; }
-        .modal-actions button { padding: 0.6rem 1.2rem; border-radius: 4px; border: none; cursor: pointer; }
-        .btn-confirmar { background-color: #dc3545; color: white; }
-        .btn-cancelar { background-color: #6c757d; color: white; }
-        footer { background-color: #1a1a1a; color: #fff; padding: 2rem 1rem; text-align: center; }
-        footer p { font-size: 0.9rem; margin-bottom: 0.5rem; }
-        footer a { color: #b3b3b3; text-decoration: none; }
+        /* Estilo para o resumo de presença */
+        .resumo-presenca { 
+            margin-top: 20px; 
+            padding: 15px; 
+            background-color: #f2f2f2; 
+            border-radius: 5px; 
+            text-align: left; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .resumo-presenca p {
+            margin: 5px 0;
+            font-size: 1.1em;
+            color: #333;
+        }
+        .resumo-presenca p strong {
+            color: #1a1a1a;
+        }
     </style>
 </head>
 <body>
@@ -69,7 +73,7 @@
         <div class="container">
             <h1>Lançamento de Presença</h1>
             <p id="data-hoje"></p>
-            <div id="lista-vendedores">
+            <p id="equipe-nome"></p> <div id="lista-vendedores">
                 <p>Carregando equipe...</p>
             </div>
         </div>
@@ -115,7 +119,7 @@
         if (lancadoPorNome) {
             statusDisplay += ` (Lançado por: ${lancadoPorNome})`;
         }
-        if (statusBoolean === false && geraDesconto) { // Apenas para Ausente COM desconto
+        if (statusBoolean === false && geraDesconto) { 
             statusDisplay += ` <span style="color: red;">(C/ Desconto)</span>`;
         }
         statusDisplay += `</p>`;
@@ -123,13 +127,11 @@
         vendedorDiv.innerHTML = `<h3>${vendedor.nome_completo}</h3>${statusDisplay}`;
         vendedorDiv.className = `vendedor ${statusText.toLowerCase()}`;
 
-        // Remove os botões após a marcação para impedir alteração
         const botoes = vendedorDiv.querySelector('.botoes');
         if (botoes) {
             botoes.innerHTML = '';
         }
     }
-
 
     function registrarStatus(vendedorId, nomeVendedor, status) {
         if (status === 'Presente') {
@@ -139,10 +141,9 @@
         }
     }
 
-    async function lancarStatus(vendedorId, nomeVendedor, statusBoolean, detalhesAusencia = {}) { // 'statusBoolean' é o booleano
+    async function lancarStatus(vendedorId, nomeVendedor, statusBoolean, detalhesAusencia = {}) {
         const dadosParaEnviar = {
             usuarioId: vendedorId,
-            // A data agora é forçada a ser CURDATE() no backend, não precisa enviar do frontend
             status: statusBoolean, 
             motivoId: statusBoolean === false ? detalhesAusencia.motivoId : null,
             observacao: statusBoolean === false ? (detalhesAusencia.observacao || null) : null
@@ -162,6 +163,8 @@
             const lancador = userProfile === 'Diretoria' || userProfile === 'Supervisor' ? 'Você' : null;
             atualizarVendedorUI(vendedorDiv, { nome_completo: nomeVendedor }, statusBoolean, lancador, detalhesAusencia.geraDesconto); 
 
+            // NOVO: Atualiza a contagem de totais após um lançamento bem-sucedido
+            carregarDadosIniciais(); // Recarrega tudo para atualizar os totais
         } catch (error) {
             console.error('Erro ao lançar presença:', error);
             alert(error.message);
@@ -204,6 +207,10 @@
             window.location.href = 'index.html?login=true';
             return;
         }
+        
+        let totalPresente = 0; // NOVO: Contador de presentes
+        let totalAusente = 0;  // NOVO: Contador de ausentes
+
         try {
             const resMotivos = await fetch(`${apiUrl}/motivos`, { headers: { 'x-auth-token': token } });
             if (!resMotivos.ok) {
@@ -230,7 +237,7 @@
             
             const vendedores = await resEquipe.json();
             const listaDiv = document.getElementById('lista-vendedores');
-            listaDiv.innerHTML = '';
+            listaDiv.innerHTML = ''; // Limpa a lista antes de reconstruir
 
             if (vendedores.length === 0) {
                 listaDiv.innerHTML = '<p>Você não possui vendedores associados à sua equipe.</p>';
@@ -241,12 +248,19 @@
                 const vendedorDiv = document.createElement('div');
                 vendedorDiv.id = `vendedor-${vendedor.id}`;
 
-                // NOVO: Verifica se o status para o dia atual já foi marcado
                 if (vendedor.hoje_status !== null) {
-                    const statusBoolean = vendedor.hoje_status; // HOJE_STATUS já é um booleano do banco
+                    const statusBoolean = vendedor.hoje_status; 
                     const lancadoPor = vendedor.hoje_lancado_por || 'Desconhecido';
                     const geraDesconto = vendedor.hoje_gera_desconto;
-                    atualizarVendedorUI(vendedorDiv, vendedor, statusBoolean, lancadoPor, geraDesconto); // Passa o booleano diretamente
+                    atualizarVendedorUI(vendedorDiv, vendedor, statusBoolean, lancadoPor, geraDesconto); 
+                    
+                    // NOVO: Contabiliza para os totais
+                    if (statusBoolean === true) {
+                        totalPresente++;
+                    } else {
+                        totalAusente++;
+                    }
+
                 } else {
                     vendedorDiv.className = 'vendedor'; 
                     vendedorDiv.innerHTML = `
@@ -259,6 +273,17 @@
                 }
                 listaDiv.appendChild(vendedorDiv);
             });
+
+            // NOVO: Adiciona o resumo de totais no final da lista
+            const resumoDiv = document.createElement('div');
+            resumoDiv.className = 'resumo-presenca';
+            resumoDiv.innerHTML = `
+                <p><strong>Total Presentes:</strong> ${totalPresente}</p>
+                <p><strong>Total Ausentes:</strong> ${totalAusente}</p>
+            `;
+            listaDiv.appendChild(resumoDiv);
+
+
         } catch (error) {
             console.error('Erro ao carregar equipe:', error);
             alert("Erro ao carregar equipe: " + error.message);
@@ -277,6 +302,19 @@
         const mes = String(hoje.getMonth() + 1).padStart(2, '0');
         const ano = hoje.getFullYear();
         document.getElementById('data-hoje').textContent = `Data de Hoje: ${dia}/${mes}/${ano}`;
+
+        // NOVO: Exibe o nome da equipe/supervisor se disponível
+        const userName = localStorage.getItem('userName'); // Obtém o nome completo do localStorage
+        const userProfile = localStorage.getItem('userProfile');
+        const equipeNomeElement = document.getElementById('equipe-nome');
+
+        if (userName && (userProfile === 'Supervisor' || userProfile === 'Diretoria')) {
+            const firstName = userName.split(' ')[0]; // Pega apenas o primeiro nome
+            equipeNomeElement.textContent = `Equipe: ${firstName}`;
+        } else {
+            equipeNomeElement.textContent = `Equipe`; // Ou deixe vazio se não for supervisor/diretoria
+        }
+        
         carregarDadosIniciais();
     });
 </script>
