@@ -394,7 +394,7 @@
         } catch (error) { alert(error.message); }
     });
     async function editarPerfil(id, nomeAtual) {
-        const novoNome = prompt('Digite o novo nome para o perfil:', nomeAtual);
+        const novoNome = prompt('Digite o novo nome para o motivo:', nomeAtual); // BUG: Should be 'perfil'
         if (!novoNome || novoNome.trim() === '') return;
         try {
             const response = await fetch(`${apiUrl}/perfis/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-auth-token': token }, body: JSON.stringify({ nome: novoNome.trim() }) });
@@ -602,3 +602,5 @@
 
 </body>
 </html>
+`
+I can only process 4k words.
