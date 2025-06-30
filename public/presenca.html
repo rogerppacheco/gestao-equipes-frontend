@@ -47,6 +47,38 @@
         .resumo-presenca p strong {
             color: #1a1a1a;
         }
+        /* Correção para o modal para garantir que ele seja uma sobreposição */
+        .modal-overlay { 
+            display: flex; /* Define como flex para centralizar, mas será none por padrão */
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(0,0,0,0.6); 
+            justify-content: center; 
+            align-items: center; 
+            z-index: 1001; 
+            visibility: hidden; /* NOVO: Oculta por padrão via CSS */
+            opacity: 0; /* NOVO: Para transição de fade */
+            transition: opacity 0.3s ease, visibility 0.3s ease; /* NOVO: Transição */
+        }
+        .modal-overlay.show { /* NOVO: Classe para exibir o modal */
+            visibility: visible;
+            opacity: 1;
+        }
+        /* Ajuste do conteúdo do modal para garantir que ele esteja contido */
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 450px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            display: flex; /* NOVO: Usar flex para organizar o conteúdo interno */
+            flex-direction: column; /* NOVO: Empilha itens verticalmente */
+            gap: 1rem; /* NOVO: Espaçamento entre os elementos */
+        }
     </style>
 </head>
 <body>
@@ -179,7 +211,8 @@
         selectMotivo.innerHTML = '<option value="">Selecione um motivo...</option>';
         motivosDisponiveis.forEach(m => selectMotivo.add(new Option(m.motivo, m.id)));
         document.getElementById('obs-motivo').value = '';
-        modal.style.display = 'flex';
+        // NOVO: Exibe o modal usando a classe 'show'
+        modal.classList.add('show');
         document.getElementById('btn-confirmar-ausencia').onclick = () => {
             const motivoId = document.getElementById('select-motivo').value;
             const observacao = document.getElementById('obs-motivo').value;
@@ -193,7 +226,8 @@
     }
 
     function fecharModal() {
-        modal.style.display = 'none';
+        // NOVO: Oculta o modal removendo a classe 'show'
+        modal.classList.remove('show');
     }
 
     window.onclick = function(event) {
@@ -208,8 +242,8 @@
             return;
         }
         
-        let totalPresente = 0; // NOVO: Contador de presentes
-        let totalAusente = 0;  // NOVO: Contador de ausentes
+        let totalPresente = 0; 
+        let totalAusente = 0;  
 
         try {
             const resMotivos = await fetch(`${apiUrl}/motivos`, { headers: { 'x-auth-token': token } });
@@ -237,7 +271,7 @@
             
             const vendedores = await resEquipe.json();
             const listaDiv = document.getElementById('lista-vendedores');
-            listaDiv.innerHTML = ''; // Limpa a lista antes de reconstruir
+            listaDiv.innerHTML = ''; 
 
             if (vendedores.length === 0) {
                 listaDiv.innerHTML = '<p>Você não possui vendedores associados à sua equipe.</p>';
@@ -254,7 +288,6 @@
                     const geraDesconto = vendedor.hoje_gera_desconto;
                     atualizarVendedorUI(vendedorDiv, vendedor, statusBoolean, lancadoPor, geraDesconto); 
                     
-                    // NOVO: Contabiliza para os totais
                     if (statusBoolean === true) {
                         totalPresente++;
                     } else {
@@ -274,7 +307,6 @@
                 listaDiv.appendChild(vendedorDiv);
             });
 
-            // NOVO: Adiciona o resumo de totais no final da lista
             const resumoDiv = document.createElement('div');
             resumoDiv.className = 'resumo-presenca';
             resumoDiv.innerHTML = `
@@ -303,7 +335,6 @@
         const ano = hoje.getFullYear();
         document.getElementById('data-hoje').textContent = `Data de Hoje: ${dia}/${mes}/${ano}`;
 
-        // NOVO: Exibe o nome da equipe/supervisor se disponível
         const userName = localStorage.getItem('userName'); // Obtém o nome completo do localStorage
         const userProfile = localStorage.getItem('userProfile');
         const equipeNomeElement = document.getElementById('equipe-nome');
@@ -312,7 +343,7 @@
             const firstName = userName.split(' ')[0]; // Pega apenas o primeiro nome
             equipeNomeElement.textContent = `Equipe: ${firstName}`;
         } else {
-            equipeNomeElement.textContent = `Equipe`; // Ou deixe vazio se não for supervisor/diretoria
+            equipeNomeElement.textContent = `Equipe`;
         }
         
         carregarDadosIniciais();
